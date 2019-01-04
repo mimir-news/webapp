@@ -1,0 +1,32 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: webapp
+  labels:
+    app: webapp
+spec:
+  replicas: 2
+  template:
+    metadata:
+      labels:
+        app: webapp
+    spec:
+      containers:
+        - name: webapp
+          image: eu.gcr.io/mimir-185212/webapp:0.1
+          ports:
+            - containerPort: 8080
+              name: svc-port
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: svc-port
+            initialDelaySeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: svc-port
+            initialDelaySeconds: 20
+          imagePullPolicy: Always
+      imagePullSecrets:
+      - name: gcr-json-key
