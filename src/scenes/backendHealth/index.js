@@ -14,8 +14,8 @@ export default class BackendHealth extends Component {
         directoryHealth: null
     };
 
-    checkNewsBackend = () => {
-        const healthy = healthCheckNewsBackend();
+    checkNewsBackend = async () => {
+        const healthy = await healthCheckNewsBackend();
         this.setState({
             newsHealth: {
                 healthy,
@@ -24,8 +24,8 @@ export default class BackendHealth extends Component {
         })
     }
 
-    checkStockBackend = () => {
-        const healthy = healthCheckStockBackend();
+    checkStockBackend = async () => {
+        const healthy = await healthCheckStockBackend();
         this.setState({
             stockHealth: {
                 healthy,
@@ -34,8 +34,8 @@ export default class BackendHealth extends Component {
         })
     }
 
-    checkDirectoryBackend = () => {
-        const healthy = healthCheckDirectoryBackend();
+    checkDirectoryBackend = async () => {
+        const healthy = await healthCheckDirectoryBackend();
         this.setState({
             directoryHealth: {
                 healthy,
