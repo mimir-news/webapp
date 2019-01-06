@@ -35,24 +35,30 @@ class Signup extends Component {
             <AuthLayout linkRoute="/login" linkText="Login">
                 <Card>
                     <h2>Sign Up</h2>
-                    <Input
-                        type="email"
-                        placeholder="Email Address"
-                        value={email}
-                        onChange={this.updateEmail}
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Password"
-                        value={password}
-                        onChange={this.updatePassword}
-                    />
-                    <Input
-                        type="password"
-                        placeholder="Repeat Password"
-                        value={passwordRepeat}
-                        onChange={this.updatePasswordRepeat}
-                    />
+                    <div className="auth-form-input">
+                        <Input
+                            type="email"
+                            placeholder="Email Address"
+                            value={email}
+                            onChange={this.updateEmail}
+                        />
+                    </div>
+                    <div className="auth-form-input">
+                        <Input
+                            type="password"
+                            placeholder="Password"
+                            value={password}
+                            onChange={this.updatePassword}
+                        />
+                    </div>
+                    <div className="auth-form-input">
+                        <Input
+                            type="password"
+                            placeholder="Repeat Password"
+                            value={passwordRepeat}
+                            onChange={this.updatePasswordRepeat}
+                        />
+                    </div>
                     <Button
                         type="primary" block
                         onClick={this.submit}

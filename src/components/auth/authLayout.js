@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import "./authLayout.css";
+import "./style.css";
 
 const AuthLayout = ({ linkRoute, linkText, children }) => (
     <div className="AuthLayout">

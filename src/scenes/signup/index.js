@@ -1,20 +1,21 @@
 import React, { Component } from 'react';
+import { withRouter } from 'react-router-dom';
 import { createNewUser } from '../../services/auth';
 import Signup from './component';
 
-export default class SignupContainer extends Component {
+class SignupContainer extends Component {
     state = {
         error: null
     };
 
     submitNewUser = async (email, password, repeatPassword) => {
-        const { user, error } = await createNewUser(email, password, repeatPassword);
+        const { error } = await createNewUser(email, password, repeatPassword);
         this.setState({ error });
         if (error) {
             return;
         }
 
-        console.log(user);
+        this.props.history.replace("/");
     };
 
     render() {
@@ -23,3 +24,5 @@ export default class SignupContainer extends Component {
         )
     }
 };
+
+export default withRouter(SignupContainer);

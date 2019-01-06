@@ -1,34 +1,55 @@
 import { makePostRequest, createDirectoryUrl } from '../api';
 import { TIMEOUT_MS } from '../api/constants';
 
-const AUTH_TIMEOUT = TIMEOUT_MS * 2;
+const AUTH_TIMEOUT = TIMEOUT_MS * 5;
 
 export const createNewUser = async (email, password, repeat) => {
-    const { ok, error } = passwordOk(password, repeat);
-    if (!ok) {
+    const { error } = credentialsOk(email, password, repeat, true);
+    if (error) {
         return { error };
     }
 
-    const url = createDirectoryUrl("v1/users");
-    const body = { email, password, repeat };
-    const { error: userErr } = await makePostRequest({ url, body, useAuth: false, timeout: AUTH_TIMEOUT });
+    const { error: userErr, status } = await makePostRequest({
+        url: createDirectoryUrl("v1/users"),
+        body: { email, password, repeat },
+        useAuth: false,
+        timeout: AUTH_TIMEOUT,
+        retryOnFailure: false
+    });
+
     if (userErr) {
-        logError(error);
-        return { error: "A user with that email already exists" };
+        return handleSignupError(userErr, status);
     }
 
-    const loginResult = await login(email, password);
-    return loginResult;
+    return login(email, password);
 };
 
+const handleSignupError = (error, status) => {
+    logError(error);
+    if (status === 409) {
+        return { error: "A user with that email already exists" }
+    }
+    return { error: "Signup failed." };
+}
+
 export const login = async (email, password) => {
-    const url = createDirectoryUrl("v1/login");
-    const body = { email, password };
-    const { response, error } = await makePostRequest({ url, body, useAuth: false, timeout: AUTH_TIMEOUT });
+    const { error: credentialsError } = credentialsOk(email, password);
+    if (credentialsError) {
+        return { error: credentialsError };
+    };
+
+    const { response, error } = await makePostRequest({
+        url: createDirectoryUrl("v1/login"),
+        body: { email, password },
+        useAuth: false,
+        timeout: AUTH_TIMEOUT,
+        retryOnFailure: false
+    });
+
     if (error) {
         logError(error)
-        return { error: "Login failed" };
-    }
+        return { error: "Email and password does not match." };
+    };
 
     const { user, token } = response;
     localStorage.setItem("authToken", token);
@@ -40,22 +61,57 @@ const logError = error => {
     console.log(JSON.stringify(error));
 }
 
-const passwordOk = (password, repeat) => {
-    if (password.length < 10) {
-        return { ok: false, error: "Password must be at least 10 characters." };
+const credentialsOk = (email, password, repeat, checkRepeat = false) => {
+    if (!emailIsValid(email)) {
+        return { ok: false, error: "Invalid email" };
+    }
+
+    return (checkRepeat)
+        ? passwordOk(email, password, repeat)
+        : passwordLengthOk(password);
+}
+
+const passwordOk = (email, password, repeat) => {
+    const { error } = passwordLengthOk(password);
+    if (error) {
+        return { error };
+    }
+
+    if (password === email) {
+        return { error: "Passwords cannot be the same as email." };
     }
 
     if (password !== repeat) {
-        return { ok: false, error: "Passwords do not match." };
+        return { error: "Passwords do not match." };
     }
 
     if (passwordIsCommon(password)) {
-        return { ok: false, error: "The given password is to week." };
+        return { error: "The given password is to weak." };
     }
 
-    return { ok: true };
+    return { error: null };
 };
 
-const passwordIsCommon = password => {
-    return false;
+const passwordLengthOk = password => {
+    if (!password) {
+        return { error: "Password cant be empty." };
+    };
+
+    if (password.length < 10) {
+        return { error: "Password must be at least 10 characters." };
+    };
+
+    return { error: null };
+};
+
+const emailIsValid = email => {
+    if (!email) {
+        return false;
+    }
+
+    return true;
 }
+
+const passwordIsCommon = password => {
+    return password === "password123";
+};

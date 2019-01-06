@@ -4,7 +4,6 @@ import {
     NEWS_BACKEND,
     STOCK_BACKEND,
     DIRECTORY_BACKEND,
-    MAX_RETRIES,
     RETRY_DELAY_MS,
     TIMEOUT_MS
 } from './constants';
@@ -30,17 +29,17 @@ export const makeDeleteRequest = options => makeRequest({
 });
 
 export const makeRequest = async options => {
-    const { url, useAuth, retries, method = "get", body = null, headers = null, timeout = TIMEOUT_MS } = options;
+    const { url, useAuth, method = "get", body = null, headers = null, timeout = TIMEOUT_MS } = options;
     const requestHeaders = (headers) ? headers : createHeaders(useAuth);
     try {
-        const { data } = await axios({
+        const { data, status } = await axios({
             method,
             url,
-            timeout: computeTimeout(retries, timeout),
+            timeout,
             data: body,
             headers: requestHeaders
         });
-        return { response: data, error: null };
+        return { response: data, error: null, status };
     } catch (error) {
         return handleRequestFailure(options, requestHeaders, error);
     }
@@ -57,7 +56,7 @@ const handleRequestFailure = (options, headers, error) => {
         return retryRequest(options, headers);
     }
 
-    return { error };
+    return { error, status: 503 };
 };
 
 const handleFailureResponse = (options, headers, error) => {
@@ -66,21 +65,23 @@ const handleFailureResponse = (options, headers, error) => {
         return retryRequest(options, headers, status);
     }
 
-    return { error: new Error(data) };
+    return { error: new Error(data), status };
 };
 
 const retryRequest = async (options, headers, status) => {
-    const { url, retries = MAX_RETRIES } = options;
-    const retryNo = MAX_RETRIES - retries + 1;
-    if (retryNo === MAX_RETRIES) {
-        const requestId = getRequestId(headers);
-        return { error: new Error(`Max retries reached. url=${url} requestId=${requestId}`) };
+    const { url, timeout = TIMEOUT_MS, retryOnFailure = true } = options;
+    const requestId = getRequestId(headers);
+    if (!retryOnFailure) {
+        return {
+            error: new Error(`Max retries reached. url=${url} requestId=${requestId}`),
+            status: 503,
+        };
     }
 
-    console.log(`Request failed retrying. requestId: ${getRequestId(headers)}`);
-    const delayFactor = (status === 503) ? retryNo * 2 : retryNo
-    await sleep(RETRY_DELAY_MS * delayFactor);
-    return makeRequest({ ...options, headers, retries: (retries - 1) });
+    console.log(`Request failed, retrying. requestId: ${requestId}`);
+    const delay = RETRY_DELAY_MS * ((status === 503) ? 2 : 1);
+    await sleep(delay);
+    return makeRequest({ ...options, headers, timeout: (timeout + delay), retryOnFailure: false });
 };
 
 const createHeaders = (useAuth = true) => {
@@ -109,7 +110,3 @@ const getClientId = () => {
 const getRequestId = headers => headers["X-Request-ID"];
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
-
-const computeTimeout = (retriesLeft, baseTimeout = TIMEOUT_MS) => (retriesLeft)
-    ? (MAX_RETRIES - retriesLeft) * RETRY_DELAY_MS + baseTimeout
-    : baseTimeout;
