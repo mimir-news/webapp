@@ -1,14 +1,12 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-import BackendHealth from './scenes/backendHealth';
-import WatchlistContainer from './scenes/watchlist';
+import { BrowserRouter as Router } from "react-router-dom";
+import Routes from './components/routes';
 import './App.css';
 
 const App = () => (
   <Router>
     <div className="App">
-      <Route path="/" exact component={WatchlistContainer} />
-      <Route path="/health" component={BackendHealth} />
+      <Routes />
     </div>
   </Router>
 );

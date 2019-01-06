@@ -6,6 +6,17 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  --color-blue: #357AE8;
+  --color-green: #7BCD21;
+  --color-red: red;
+  --color-grey-bg: #FBFBFB;
+  --color-grey-text: #AAAAAA;
+  --color-black: #222222;
+}
+
+#root {
+  min-height: 100%;
+  min-width: 100%;
 }
 
 code {

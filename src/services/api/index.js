@@ -30,11 +30,16 @@ export const makeDeleteRequest = options => makeRequest({
 });
 
 export const makeRequest = async options => {
-    const { url, useAuth, retries, method = "get", body = null, headers = null } = options;
+    const { url, useAuth, retries, method = "get", body = null, headers = null, timeout = TIMEOUT_MS } = options;
     const requestHeaders = (headers) ? headers : createHeaders(useAuth);
     try {
-        const timeout = computeTimeout(retries);
-        const { data } = await axios({ method, url, timeout, data: body, headers: requestHeaders });
+        const { data } = await axios({
+            method,
+            url,
+            timeout: computeTimeout(retries, timeout),
+            data: body,
+            headers: requestHeaders
+        });
         return { response: data, error: null };
     } catch (error) {
         return handleRequestFailure(options, requestHeaders, error);
@@ -105,6 +110,6 @@ const getRequestId = headers => headers["X-Request-ID"];
 
 const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));
 
-const computeTimeout = retriesLeft => (retriesLeft)
-    ? (MAX_RETRIES - retriesLeft) * RETRY_DELAY_MS + TIMEOUT_MS
-    : TIMEOUT_MS;
+const computeTimeout = (retriesLeft, baseTimeout = TIMEOUT_MS) => (retriesLeft)
+    ? (MAX_RETRIES - retriesLeft) * RETRY_DELAY_MS + baseTimeout
+    : baseTimeout;
