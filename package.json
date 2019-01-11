@@ -16,7 +16,8 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "docker-build": "docker build -t $(appv image -n) ."
+    "docker-build": "docker build -t $(appv image -n) .",
+    "deploy": "kubectl apply -f deployment/"
   },
   "eslintConfig": {
     "extends": "react-app"
