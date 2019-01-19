@@ -1,7 +1,11 @@
-import { makePostRequest, createDirectoryUrl } from '../api';
-import { TIMEOUT_MS } from '../api/constants';
+import { makePostRequest, makePutRequest, makeGetRequest, createDirectoryUrl } from '../api';
+import { TIMEOUT_MS, AUTH_TOKEN_KEY } from '../api/constants';
 
 const AUTH_TIMEOUT = TIMEOUT_MS * 5;
+const REFRESH_TOKEN_KEY = "refreshToken"
+const USER_KEY = "user";
+const USER_ID_KEY = `${USER_KEY}Id`;
+const ROLE_KEY = `${USER_KEY}Role`;
 
 export const createNewUser = async (email, password, repeat) => {
     const { error } = credentialsOk(email, password, repeat, true);
@@ -51,11 +55,76 @@ export const login = async (email, password) => {
         return { error: "Email and password does not match." };
     };
 
-    const { user, token } = response;
-    localStorage.setItem("authToken", token);
-    localStorage.setItem("userId", user.id);
+    const { user, token, refreshToken } = response;
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(USER_ID_KEY, user.id);
+    localStorage.setItem(ROLE_KEY, user.role);
     return { user };
 }
+
+export const getAnonymousTokenIfNotLoggedIn = async () => {
+    if (isLoggedIn()) {
+        console.log("Already logged in");
+        return;
+    }
+
+    const { user, error } = await getAnonymousToken();
+    if (error) {
+        console.error(error);
+        await sleep(1000);
+        getAnonymousTokenIfNotLoggedIn();
+    }
+
+    localStorage.setItem(USER_KEY, JSON.stringify(user))
+}
+
+const getAnonymousToken = async () => {
+    const { response, error } = await makeGetRequest({
+        url: createDirectoryUrl("v1/login/anonymous"),
+        useAuth: false,
+        timeout: AUTH_TIMEOUT,
+        retryOnFailure: false
+    });
+
+    if (error) {
+        logError(error)
+        return { error: "Failed to retrive anonymous token" };
+    };
+
+    const { user, token } = response;
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(ROLE_KEY, user.role);
+    return { user };
+}
+
+export const refreshToken = async () => {
+    const { response, error } = await makePutRequest({
+        url: createDirectoryUrl("v1/login"),
+        body: getRefreshBody(),
+        useAuth: false,
+        timeout: AUTH_TIMEOUT,
+        retryOnFailure: false
+    });
+
+    if (error) {
+        logError(error)
+        return { error: "Failed to retrive refresh token" };
+    };
+
+    const { user, token, refreshToken } = response;
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.setItem(ROLE_KEY, user.role);
+    return { user };
+}
+
+const getRefreshBody = () => ({
+    token: localStorage.getItem(AUTH_TOKEN_KEY),
+    refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY)
+})
+
+export const isLoggedIn = () => localStorage.getItem(ROLE_KEY) === "USER";
 
 const logError = error => {
     console.log(JSON.stringify(error));
@@ -115,3 +184,5 @@ const emailIsValid = email => {
 const passwordIsCommon = password => {
     return password === "password123";
 };
+
+const sleep = milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds));

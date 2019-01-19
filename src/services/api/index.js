@@ -5,7 +5,8 @@ import {
     STOCK_BACKEND,
     DIRECTORY_BACKEND,
     RETRY_DELAY_MS,
-    TIMEOUT_MS
+    TIMEOUT_MS,
+    AUTH_TOKEN_KEY
 } from './constants';
 
 export const makeGetRequest = options => makeRequest({
@@ -93,7 +94,7 @@ const createHeaders = (useAuth = true) => {
     };
 
     return (useAuth)
-        ? { "Authorization": `Bearer ${localStorage.authToken}`, ...baseHeaders }
+        ? { "Authorization": `Bearer ${localStorage.getItem(AUTH_TOKEN_KEY)}`, ...baseHeaders }
         : baseHeaders;
 };
 
