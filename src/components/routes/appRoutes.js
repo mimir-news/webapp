@@ -4,7 +4,7 @@ import { Layout } from 'antd';
 import BackendHealth from '../../scenes/backendHealth';
 import WatchlistContainer from '../../scenes/watchlist';
 import SideMenu from '../menu';
-const { Content, Sider } = Layout
+const { Content, Sider } = Layout;
 
 const AppRoutes = () => (
     <Layout className="AppLayout">

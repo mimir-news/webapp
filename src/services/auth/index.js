@@ -28,6 +28,8 @@ export const createNewUser = async (email, password, repeat) => {
     return login(email, password);
 };
 
+export const getUserId = () => localStorage.getItem(USER_ID_KEY);
+
 const handleSignupError = (error, status) => {
     logError(error);
     if (status === 409) {
@@ -58,6 +60,7 @@ export const login = async (email, password) => {
     const { user, token, refreshToken } = response;
     localStorage.setItem(AUTH_TOKEN_KEY, token);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+    localStorage.removeItem(USER_KEY);
     localStorage.setItem(USER_ID_KEY, user.id);
     localStorage.setItem(ROLE_KEY, user.role);
     return { user };
@@ -119,12 +122,14 @@ export const refreshToken = async () => {
     return { user };
 }
 
+export const isLoggedIn = () => localStorage.getItem(ROLE_KEY) === "USER";
+
+export const loadAnonymousUser = () => JSON.parse(localStorage.getItem(USER_KEY))
+
 const getRefreshBody = () => ({
     token: localStorage.getItem(AUTH_TOKEN_KEY),
     refreshToken: localStorage.getItem(REFRESH_TOKEN_KEY)
-})
-
-export const isLoggedIn = () => localStorage.getItem(ROLE_KEY) === "USER";
+});
 
 const logError = error => {
     console.log(JSON.stringify(error));

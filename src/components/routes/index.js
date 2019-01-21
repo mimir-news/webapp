@@ -2,13 +2,13 @@ import React from 'react';
 import { Route, Switch } from 'react-router-dom';
 import SignupContainer from '../../scenes/signup';
 import LoginContainer from '../../scenes/login';
-import AppRoutes from './appRoutes';
+import AppRoutesContainer from './appRoutesContainer';
 
 const Routes = () => (
     <Switch>
         <Route path="/signup" component={SignupContainer} />
         <Route path="/login" component={LoginContainer} />
-        <Route path="/" component={AppRoutes} />
+        <Route path="/" component={AppRoutesContainer} />
     </Switch>
 );
 

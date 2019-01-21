@@ -1,0 +1,31 @@
+{
+    "user": {
+        "loaded": "boolean",
+        "error": "Optional[string]",
+        "id": "string",
+        "email": "string",
+        "role": "string",
+        "createdAt": "string"
+    },
+    "watchlists": {
+        "watchlistId": {
+            "id": "string",
+            "name": "string",
+            "createdAt": "string",
+            "stocks": [
+                "symbol1",
+                "symbol2"
+            ]
+        }
+    },
+    "stocks": {
+        "symbol1": {
+            "symbol": "string",
+            "name": "string"
+        },
+        "symbol2": {
+            "symbol": "string",
+            "name": "string"
+        }
+    }
+}
